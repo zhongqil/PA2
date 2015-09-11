@@ -17,8 +17,8 @@ class MovieData #a class to deal with movie data based on file.
 
 	def load_data(file_path, num_lines=-1)	#load user data from file
 		data = open(file_path)
-		movie_data = {}
-		user_data = {}
+		movie_data = Hash.new {|h, k| h[k] = Array.new}
+		user_data = Hash.new {|h, k| h[k] = Array.new}
 		original_data = []
 		line_count = 0
 		txt = data.read
@@ -30,16 +30,8 @@ class MovieData #a class to deal with movie data based on file.
 		txt.each_line do |line| #read line by line
 			break if line_count == num_lines
 			curline = line.split(' ')
-			if movie_data.has_key?(curline[1])
-				movie_data[curline[1]].push({user_id: curline[0].to_i, rating: curline[2].to_f, time_stamp: curline[3]})
-			else
-				movie_data[curline[1]] = [{user_id: curline[0].to_i, rating: curline[2].to_f, time_stamp: curline[3]}]
-			end
-			if user_data.has_key?(curline[0])
-				user_data[curline[0]].push({movie_id: curline[1].to_i, rating: curline[2].to_f, time_stamp: curline[3]})
-			else
-				user_data[curline[0]] = [{movie_id: curline[1].to_i, rating: curline[2].to_f, time_stamp: curline[3]}]
-			end
+			movie_data[curline[1]].push({user_id: curline[0].to_i, rating: curline[2].to_f, time_stamp: curline[3]})
+			user_data[curline[0]].push({movie_id: curline[1].to_i, rating: curline[2].to_f, time_stamp: curline[3]})
 			original_data.push({user_id: curline[0].to_i, movie_id: curline[1].to_i, rating: curline[2].to_f, time_stamp: curline[3]})
 			line_count += 1
 		end
@@ -80,8 +72,11 @@ class MovieData #a class to deal with movie data based on file.
 
 	def most_similar(u) #calculate the similarity score for every user, return a descendant user list based on similarity score.
 		score_list = []
-		sorted = @training_user_data.sort_by {|user_id, info| similarity(user_id, u)}
-		sorted = sorted.each {|line| score_list.push(line[0])}
+		baseline = 8 # only use the similar user that has the similar score above 8
+		sorted = @training_user_data.each do |user_id, info|  # take all the similar user above baseline, use the average rating for the movie as prediction
+			next if similarity(user_id, u) < baseline
+				score_list.push(user_id)
+		end
 		return score_list.reverse		
 	end
 
@@ -95,24 +90,23 @@ class MovieData #a class to deal with movie data based on file.
 	end
 
 	def predict(u, movie_id, movie_data=@training_movie_data) #returns the predicted rating for the movie, the user would give.
-		user_list = []
-		baseline = 7.5 # only use the similar user that has the similar score above 7.5
 		similar_sum = 0
 		all_sum = 0
-		most_similar(u).each do |user_id| # take all the similar user above baseline, use the average rating for the movie as prediction
-			next if similarity(user_id, u) < baseline
-			user_list.push(user_id)
-		end
-		movie_data[movie_id.to_s].each do |info|
-			if user_list.include? info[:user_id]
-				similar_sum += info[:rating]
+		user_list = most_similar(u)
+		if movie_data[movie_id.to_s] 
+			movie_data[movie_id.to_s].each do |info|
+				if user_list.include? info[:user_id]
+					similar_sum += info[:rating]
+				end
+				all_sum += info[:rating]
 			end
-			all_sum += info[:rating]
+		else
+			return 3 #if no movie found, give 3 score for prediction
 		end
 		if similar_sum != 0 # if there are no similar user score that higher than baseline, use the average rating from all user as prediction
 			avg = similar_sum.to_f/user_list.size
 		else
-			avg = all_sum.to_f/viewers(movie_id).size
+			avg = all_sum.to_f/movie_data[movie_id.to_s].size
 		end
 		return avg.round(4)
 	end
@@ -141,6 +135,7 @@ class MovieData #a class to deal with movie data based on file.
 			curline = [info[:user_id], info[:movie_id], info[:rating], result]
 			target_list.push(curline)
 			lines_count += 1
+			puts lines_count
 		end
 		return target_list
 	end
@@ -153,15 +148,16 @@ z = MovieData.new(foldername, :u1)
 #puts z.similarity(1, 113)
 #put z.most_similar(1)
 #puts z.rating(251, 100)
-#puts z.movies(196)
-#puts z.viewers(242)
-puts Time.now
+#z.movies(196)
+#puts z.viewers(589)
+before = Time.now
 #puts z.predict(251, 100)
-t_list = z.run_test(100)
+t_list = z.run_test(5)
 #puts t_list
-puts Time.now
+after = Time.now
+puts after - before
 t = MovieTest.new(t_list)
-#puts t.mean
-#puts t.stddev
-#puts t.rms
+puts t.mean
+puts t.stddev
+puts t.rms
 #puts t.to_a
