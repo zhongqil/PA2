@@ -67,13 +67,9 @@ class MovieData #a class to deal with movie data based on file.
 
 	def similarity(user1, user2) #calculate similarity based on the movie in common between 2 users
 		sum = 0						#and how close they rate those movies.
-		user1_dic = {}
-		user2_dic = {}
-		@training_user_data[user1.to_s].each {|info| user1_dic[info[:movie_id]] = info[:rating]}
-		@training_user_data[user2.to_s].each {|info| user2_dic[info[:movie_id]] = info[:rating]}
-		user1_movies = user1_dic.keys
-		user2_movies = user2_dic.keys
-		com_movies = user1_movies & user2_movies
+		user1_dic = getUserHash(user1)
+		user2_dic = getUserHash(user1)
+		com_movies = user1_dic.keys & user2_dic.keys
 		com_movies.each {|movie| sum += (user1_dic[movie] - user2_dic[movie]).abs} #accumulative absolute value for common movies, which can be regarded as difference
 		if sum == 0 #average difference
 			avg = 0
@@ -83,6 +79,11 @@ class MovieData #a class to deal with movie data based on file.
 		score = (1 - (avg.to_f + 1) / (avg.to_f + 2)) * 20 #a self developed function, the average difference closer to 0, the result closer to 10
 		score = score.round(4)
 		return score #the closer the rating, the higher the score, range 0-10
+	end
+
+	def getUserHash(user, dataset=@training_user_data)
+		dataset[user.to_s].each {|info| user_dic[info[:movie_id]] = info[:rating]}
+		return user_dic
 	end
 
 	def most_similar(u) #calculate the similarity score for every user, return a descendant user list based on similarity score.
