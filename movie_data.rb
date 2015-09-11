@@ -155,8 +155,12 @@ z = MovieData.new(foldername, :u1)
 #puts z.rating(251, 100)
 #puts z.movies(196)
 #puts z.viewers(242)
+puts Time.now
 #puts z.predict(251, 100)
-t = MovieTest.new(z.run_test(100))
+t_list = z.run_test(100)
+#puts t_list
+puts Time.now
+t = MovieTest.new(t_list)
 #puts t.mean
 #puts t.stddev
 #puts t.rms
