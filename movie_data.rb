@@ -112,15 +112,17 @@ class MovieData #a class to deal with movie data based on file.
 	end
 
 	def movies(user_id, users=@training_user_data) # returns the array of movies that the user has watched
-		movie_list = []
-		users[user_id.to_s].each {|info| movie_list.push(info[:movie_id])}
-		return movie_list
+		return getList(user_id, :movie_id, users)
 	end
 
 	def viewers(movie_id, movies=@training_movie_data) # returns the array of users that have seen the movie
-		user_list = []
-		movies[movie_id.to_s].each {|info| user_list.push(info[:user_id])}
-		return user_list
+		return getList(movie_id, :user_id, movies)
+	end
+
+	def getList(id_name, id_symbol, dataset) # returns the array of required object
+		the_list = []
+		dataset[id_name.to_s].each {|info| the_list.push(info[id_symbol])}
+		return the_list
 	end
 
 	def run_test(k=-1, original_data=@test_original_data) # returns the first k lines of movie test object with predictions in it.
