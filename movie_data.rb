@@ -82,6 +82,7 @@ class MovieData #a class to deal with movie data based on file.
 	end
 
 	def getUserHash(user, dataset=@training_user_data)
+		user_dic = {}
 		dataset[user.to_s].each {|info| user_dic[info[:movie_id]] = info[:rating]}
 		return user_dic
 	end
