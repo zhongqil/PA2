@@ -38,7 +38,7 @@ class MovieData #a class to deal with movie data based on file.
 		return movie_data, user_data, original_data
 	end
 
-	def getHash(id_name, line)
+	def getHash(id_name, line) # interpret the raw data to readable hash
 		the_hash = {rating: line[2].to_f, time_stamp: line[3]}
 		if id_name == :user_id
 			id_value = line[0].to_i
@@ -71,17 +71,21 @@ class MovieData #a class to deal with movie data based on file.
 		user2_dic = getUserHash(user1)
 		com_movies = user1_dic.keys & user2_dic.keys
 		com_movies.each {|movie| sum += (user1_dic[movie] - user2_dic[movie]).abs} #accumulative absolute value for common movies, which can be regarded as difference
-		if sum == 0 #average difference
-			avg = 0
-		else
-			avg = sum.to_f / com_movies.size
-		end
-		score = (1 - (avg.to_f + 1) / (avg.to_f + 2)) * 20 #a self developed function, the average difference closer to 0, the result closer to 10
-		score = score.round(4)
-		return score #the closer the rating, the higher the score, range 0-10
+		return calculate_similarity_score(sum, com_movies.size)
 	end
 
-	def getUserHash(user, dataset=@training_user_data)
+	def calculate_similarity_score(sum_rating, num_com_movies) #a self developed function, the average difference closer to 0, the result closer to 10
+		if sum_rating == 0 #average difference
+			avg = 0
+		else
+			avg = sum_rating.to_f / com_movies.size
+		end
+		score = (1 - (avg.to_f + 1) / (avg.to_f + 2)) * 20
+		score = score.round(4) #the closer the rating, the higher the score, range 0-10
+		return score
+	end
+
+	def getUserHash(user, dataset=@training_user_data) # get a new hash including movie_id and rating for the given user
 		user_dic = {}
 		dataset[user.to_s].each {|info| user_dic[info[:movie_id]] = info[:rating]}
 		return user_dic
