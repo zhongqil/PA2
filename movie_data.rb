@@ -30,12 +30,27 @@ class MovieData #a class to deal with movie data based on file.
 		txt.each_line do |line| #read line by line
 			break if line_count == num_lines
 			curline = line.split(' ')
-			movie_data[curline[1]].push({user_id: curline[0].to_i, rating: curline[2].to_f, time_stamp: curline[3]})
-			user_data[curline[0]].push({movie_id: curline[1].to_i, rating: curline[2].to_f, time_stamp: curline[3]})
-			original_data.push({user_id: curline[0].to_i, movie_id: curline[1].to_i, rating: curline[2].to_f, time_stamp: curline[3]})
+			movie_data[curline[1]].push(getHash(:user_id, curline))
+			user_data[curline[0]].push(getHash(:movie_id, curline))
+			original_data.push(getHash(:other, curline))
 			line_count += 1
 		end
 		return movie_data, user_data, original_data
+	end
+
+	def getHash(id_name, line)
+		the_hash = {rating: line[2].to_f, time_stamp: line[3]}
+		if id_name == :user_id
+			id_value = line[0].to_i
+			the_hash[id_name] = id_value
+		elsif id_name == :movie_id
+			id_value == line[1].to_i
+			the_hash[id_name] = id_value
+		else
+			the_hash[:user_id] = line[0].to_i
+			the_hash[:movie_id] = line[1].to_i
+		end
+		return the_hash
 	end
 
 	def popularity(movie_id) #calculate popularity based on how many times the movie being mentioned, return frequency
@@ -154,7 +169,7 @@ z = MovieData.new(foldername, :u1)
 #puts z.viewers(589)
 before = Time.now
 #puts z.predict(251, 100)
-t_list = z.run_test(5)
+t_list = z.run_test(50)
 #puts t_list
 after = Time.now
 puts after - before
