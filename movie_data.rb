@@ -121,13 +121,13 @@ class MovieData #a class to deal with movie data based on file.
 				end
 				all_sum += info[:rating]
 			end
-		else
-			return 3 #if no movie found, give 3 score for prediction
 		end
 		if similar_sum != 0 # if there are no similar user score that higher than baseline, use the average rating from all user as prediction
 			avg = similar_sum.to_f/user_list.size
-		else
+		elsif movie_data[movie_id.to_s].size != 0
 			avg = all_sum.to_f/movie_data[movie_id.to_s].size
+		else
+			avg = 3.5 #if no movie found, give 3.5 score for prediction
 		end
 		return avg.round(4)
 	end
@@ -158,7 +158,6 @@ class MovieData #a class to deal with movie data based on file.
 			curline = [info[:user_id], info[:movie_id], info[:rating], result]
 			target_list.push(curline)
 			lines_count += 1
-			puts lines_count
 		end
 		return target_list
 	end
@@ -175,7 +174,7 @@ z = MovieData.new(foldername, :u1)
 #puts z.viewers(589)
 before = Time.now
 #puts z.predict(251, 100)
-t_list = z.run_test(50)
+t_list = z.run_test(10000)
 #puts t_list
 after = Time.now
 puts after - before
